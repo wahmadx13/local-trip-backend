@@ -33,4 +33,16 @@ export class AppConfigService {
   get databaseUrl(): string {
     return this.configService.get<string>('database.url') ?? '';
   }
+
+  get firebaseProjectId(): string {
+    return this.configService.get<string>('auth.firebaseProjectId') ?? '';
+  }
+
+  get firebasePrivateKey(): string {
+    return this.configService.get<string>('auth.firebasePrivateKey') ?? '';
+  }
+
+  get firebaseClientEmail(): string {
+    return this.configService.get<string>('auth.firebaseClientEmail') ?? '';
+  }
 }

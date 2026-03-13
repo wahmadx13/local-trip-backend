@@ -18,12 +18,12 @@ model User {
   firebaseUid String   @unique @map("firebase_uid")
   role        Role     @default(GUEST) @map("role")
   fullName    String   @map("full_name")
-  email       String   @unique
-  phoneNumber String?  @map("phone_number")
+  email       String?  @unique
+  phoneNumber String?  @unique @map("phone_number")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  @@index([email, phoneNumber, fullName])
+  @@index([fullName])
   @@index([firebaseUid])
   @@map("users")
 }

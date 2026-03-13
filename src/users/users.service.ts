@@ -1,29 +1,41 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { User } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { normalizePhoneNumber } from '../utils/helpers';
+import { normalizeEmail, normalizePhoneNumber } from '../utils/helpers';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserEntity } from './entities/user.entity';
+
+type CreateAuthUserInput = Pick<
+  UserEntity,
+  'firebaseUid' | 'fullName' | 'role'
+> & {
+  email?: string;
+  phoneNumber?: string;
+};
 
 @Injectable()
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(createUserDto: CreateUserDto): Promise<User> {
+  private normalizeUserInput<
+    T extends { email?: string; phoneNumber?: string },
+  >(data: T): T {
+    return {
+      ...data,
+      email: data.email ? normalizeEmail(data.email) : undefined,
+      phoneNumber: data.phoneNumber
+        ? normalizePhoneNumber(data.phoneNumber)
+        : undefined,
+    };
+  }
+
+  create(createUserDto: CreateUserDto): Promise<UserEntity> {
     return this.prisma.user.create({
-      data: {
-        firebaseUid: createUserDto.firebaseUid,
-        role: createUserDto.role,
-        fullName: createUserDto.fullName,
-        email: createUserDto.email,
-        phoneNumber: createUserDto.phoneNumber
-          ? normalizePhoneNumber(createUserDto.phoneNumber)
-          : undefined,
-      },
+      data: this.normalizeUserInput(createUserDto),
     });
   }
 
-  findAll(): Promise<User[]> {
+  findAll(): Promise<UserEntity[]> {
     return this.prisma.user.findMany({
       orderBy: {
         createdAt: 'desc',
@@ -31,7 +43,19 @@ export class UsersService {
     });
   }
 
-  async findOne(id: string): Promise<User> {
+  findByFirebaseUid(firebaseUid: string): Promise<UserEntity | null> {
+    return this.prisma.user.findUnique({
+      where: { firebaseUid },
+    });
+  }
+
+  createFromAuth(input: CreateAuthUserInput): Promise<UserEntity> {
+    return this.prisma.user.create({
+      data: this.normalizeUserInput(input),
+    });
+  }
+
+  async findOne(id: string): Promise<UserEntity> {
     const user = await this.prisma.user.findUnique({
       where: { id },
     });
@@ -43,20 +67,12 @@ export class UsersService {
     return user;
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+  async update(id: string, updateUserDto: UpdateUserDto): Promise<UserEntity> {
     await this.findOne(id);
 
     return this.prisma.user.update({
       where: { id },
-      data: {
-        firebaseUid: updateUserDto.firebaseUid,
-        role: updateUserDto.role,
-        fullName: updateUserDto.fullName,
-        email: updateUserDto.email,
-        phoneNumber: updateUserDto.phoneNumber
-          ? normalizePhoneNumber(updateUserDto.phoneNumber)
-          : undefined,
-      },
+      data: this.normalizeUserInput(updateUserDto),
     });
   }
 }

@@ -2,6 +2,10 @@ export function normalizePhoneNumber(value: string): string {
   return value.replace(/\s+/g, '').trim();
 }
 
+export function normalizeEmail(value: string): string {
+  return value.trim().toLowerCase();
+}
+
 export function splitCsv(value: string): string[] {
   return value
     .split(',')
