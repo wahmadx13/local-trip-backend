@@ -10,12 +10,13 @@ enum Role {
   ADMIN
   TOUR_GUIDE
   TOURIST
+  GUEST
 }
 
 model User {
   id          String   @id @default(cuid())
   firebaseUid String   @unique @map("firebase_uid")
-  role        Role     @default(TOURIST) @map("role")
+  role        Role     @default(GUEST) @map("role")
   fullName    String   @map("full_name")
   email       String   @unique
   phoneNumber String?  @map("phone_number")
